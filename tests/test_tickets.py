@@ -28,6 +28,14 @@ class TestPriority(unittest.TestCase):
         result = calculate_priority("low", 1)
         self.assertEqual(result, "low")
 
+    def test_priority_boundary_3_users(self):
+        result = calculate_priority("low", 3)
+        self.assertEqual(result, "medium")
+
+    def test_priority_boundary_10_users(self):
+        result = calculate_priority("high", 10)
+        self.assertEqual(result, "critical")
+
 
 class TestTicketCreation(unittest.TestCase):
 
@@ -47,9 +55,21 @@ class TestTicketCreation(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_ticket("", "Network", "high", 5)
 
+    def test_whitespace_only_title(self):
+        with self.assertRaises(ValueError):
+            validate_ticket("   ", "Network", "high", 5)
+
     def test_invalid_users(self):
         with self.assertRaises(ValueError):
             validate_ticket("Internet", "Network", "high", 0)
+
+    def test_invalid_category(self):
+        with self.assertRaises(ValueError):
+            validate_ticket("WiFi problem", "Food", "high", 5)
+
+    def test_invalid_urgency(self):
+        with self.assertRaises(ValueError):
+            validate_ticket("WiFi problem", "Network", "extreme", 5)
 
     def test_generate_ticket_id(self):
         tickets = [
@@ -58,8 +78,11 @@ class TestTicketCreation(unittest.TestCase):
         ]
 
         result = generate_ticket_id(tickets)
-
         self.assertEqual(result, "T003")
+
+    def test_generate_ticket_id_empty(self):
+        result = generate_ticket_id([])
+        self.assertEqual(result, "T001")
 
 
 class TestTicketViewing(unittest.TestCase):
@@ -71,7 +94,6 @@ class TestTicketViewing(unittest.TestCase):
         ]
 
         result = list_tickets(tickets)
-
         self.assertEqual(len(result), 2)
 
     def test_view_existing_ticket(self):
@@ -81,7 +103,6 @@ class TestTicketViewing(unittest.TestCase):
         ]
 
         result = view_ticket(tickets, "T002")
-
         self.assertEqual(result["title"], "Computer problem")
 
     def test_view_missing_ticket(self):
@@ -90,7 +111,6 @@ class TestTicketViewing(unittest.TestCase):
         ]
 
         result = view_ticket(tickets, "T999")
-
         self.assertIsNone(result)
 
 
