@@ -1,6 +1,8 @@
 """Integration tests for the interactive CampusFlow CLI."""
 import io
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from main import main
@@ -9,8 +11,13 @@ from main import main
 class TestInteractiveCLI(unittest.TestCase):
     def run_cli(self, inputs):
         output = io.StringIO()
-        with patch("builtins.input", side_effect=inputs), patch("sys.stdout", output):
-            main()
+        with tempfile.TemporaryDirectory() as tempdir:
+            data_file = Path(tempdir) / "tickets.json"
+            from campusflow.storage import load_tickets, save_tickets
+            with patch("builtins.input", side_effect=inputs), patch("sys.stdout", output), \
+                 patch("main.load_tickets", side_effect=lambda: load_tickets(data_file)), \
+                 patch("main.save_tickets", side_effect=lambda tickets: save_tickets(tickets, data_file)):
+                main()
         return output.getvalue()
 
     def test_menu_exit(self):
