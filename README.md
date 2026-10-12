@@ -47,6 +47,10 @@ Each ticket includes `id`, `title`, `category`, `urgency`, `affected_users`, `pr
 
 Priority is calculated from urgency and affected users: `critical`, `high`, `medium`, or `low`.
 
+## Verify persistence
+
+Create a ticket, exit with option **9**, then run `python3 main.py` again and choose option **2**. The saved ticket should still be listed.
+
 ## Automated tests
 
 ```bash
@@ -61,12 +65,14 @@ The tests cover ticket validation and creation, workflow management, reports, an
 - `campusflow/tickets.py` — ticket creation, validation and lookup
 - `campusflow/workflow.py` — assignment, status transitions and queue
 - `campusflow/reports.py` — summary reporting
+- `campusflow/storage.py` — persistent JSON storage
 - `tests/` — automated unit and CLI tests
-- `docs/` — supporting project documentation
+- `docs/ai-learning-log.md` — AI assistance, verification evidence, and pending checks
+- `docs/design-decisions.md` — design tradeoffs and limitations
 
 ## Important limitation
 
-Tickets are stored **in memory** during the CLI session. They are lost when the program exits. Persistent file or database storage is **not implemented** in this version; do not assume tickets survive a restart.
+Tickets are saved in **`tickets.json`** in the current working directory. The CLI loads them at startup and saves changes after creating, assigning, updating, or reopening tickets. Restart the application to verify the ticket is still present. If the file is malformed, the CLI reports the error rather than overwriting it. JSON storage is intended for a single local user, not concurrent editing.
 
 ## Collaboration and review
 
