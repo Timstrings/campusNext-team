@@ -56,6 +56,23 @@ class TestInteractiveCLI(unittest.TestCase):
         self.assertIn("No unresolved tickets.", output)
         self.assertIn("Reopened:", output)
 
+    def test_ticket_survives_restart(self):
+        from campusflow.storage import load_tickets, save_tickets
+        with tempfile.TemporaryDirectory() as tempdir:
+            data_file = Path(tempdir) / "tickets.json"
+            output = io.StringIO()
+            with patch("main.load_tickets", side_effect=lambda: load_tickets(data_file)), \
+                 patch("main.save_tickets", side_effect=lambda tickets: save_tickets(tickets, data_file)), \
+                 patch("sys.stdout", output):
+                with patch("builtins.input", side_effect=[
+                    "1", "Internet down", "Network", "high", "12", "9"
+                ]):
+                    main()
+                with patch("builtins.input", side_effect=["2", "9"]):
+                    main()
+            self.assertIn("'id': 'T001'", output.getvalue())
+            self.assertEqual(load_tickets(data_file)[0]["id"], "T001")
+
     def test_invalid_input_does_not_crash(self):
         output = self.run_cli([
             "0", "1", "Bad input", "Network", "high", "abc",
