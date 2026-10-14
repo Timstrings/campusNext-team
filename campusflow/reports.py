@@ -1,31 +1,17 @@
-
-def generate_report(tickets):
-    """Generate a summary of tickets by status and priority."""
-
-    report = {
-        "total": len(tickets),
-        "by_status": {
-            "open": 0,
-            "in_progress": 0,
-            "resolved": 0,
-        },
-        "by_priority": {
-            "critical": 0,
-            "high": 0,
-            "medium": 0,
-            "low": 0,
-        },
+from collections import Counter
+from .tickets import Ticket, STATUSES, PRIORITIES, CATEGORIES
+def build_report(tickets: list[Ticket]) -> dict:
+    statuses = Counter(t.status for t in tickets)
+    priorities = Counter(t.priority for t in tickets)
+    categories = Counter(t.category for t in tickets)
+    total = len(tickets)
+    resolved = statuses.get("resolved", 0)
+    return {
+        "total": {"tickets": total},
+        "by_status": {s: statuses.get(s, 0) for s in sorted(STATUSES)},
+        "by_priority": {p: priorities.get(p, 0) for p in ("critical", "high", "medium", "low")},
+        "by_category": {c: categories.get(c, 0) for c in sorted(CATEGORIES)},
+        "unresolved": statuses.get("open", 0) + statuses.get("in_progress", 0),
+        "resolved": resolved,
+        "resolution_percentage": round(resolved / total * 100, 2) if total else 0.0,
     }
-
-    for ticket in tickets:
-        status = ticket["status"]
-        priority = ticket["priority"]
-
-        if status in report["by_status"]:
-            report["by_status"][status] += 1
-
-        if priority in report["by_priority"]:
-            report["by_priority"][priority] += 1
-
-    return report
-
