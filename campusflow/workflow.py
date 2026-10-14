@@ -99,4 +99,22 @@ def get_ticket_queue(tickets):
         ),
     )
 
+def change_ticket_status(tickets, ticket_id, new_status):
+    """Change a ticket status and return a CLI-friendly result.
+
+    A rejected transition does not modify the ticket collection.
+    """
+    try:
+        ticket = update_status(tickets, ticket_id, new_status)
+    except ValueError as error:
+        return {
+            "ok": False,
+            "error": str(error)
+        }
+
+    return {
+        "ok": True,
+        "ticket": ticket
+    }
+
 

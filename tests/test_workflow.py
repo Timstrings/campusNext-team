@@ -1,5 +1,9 @@
 
 import unittest
+import copy
+
+
+from campusflow.workflow import change_ticket_status
 
 from campusflow.workflow import (
     assign_ticket,
@@ -179,6 +183,67 @@ class TestTicketQueue(unittest.TestCase):
             [ticket["id"] for ticket in self.tickets],
             original_ids,
         )
+
+class TestChangeTicketStatus(unittest.TestCase):
+    def setUp(self):
+        self.tickets = [
+            {
+                "id": "T001",
+                "title": "Wi-Fi not working",
+                "category": "Network",
+                "urgency": "high",
+                "affected_users": 12,
+                "priority": "critical",
+                "status": "open",
+                "assigned_to": None,
+                "notes": []
+            }
+        ]
+
+    def test_assigned_open_ticket_can_start(self):
+        self.tickets[0]["assigned_to"] = "IT Support"
+
+        result = change_ticket_status(self.tickets, "T001", "in_progress")
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(self.tickets[0]["status"], "in_progress")
+
+    def test_unassigned_open_ticket_cannot_start_and_state_is_unchanged(self):
+        before = copy.deepcopy(self.tickets)
+
+        result = change_ticket_status(self.tickets, "T001", "in_progress")
+
+        self.assertFalse(result["ok"])
+        self.assertEqual(
+            result["error"],
+            "Assign the ticket before starting work."
+        )
+        self.assertEqual(self.tickets, before)
+
+    def test_invalid_status_is_rejected_and_state_is_unchanged(self):
+        before = copy.deepcopy(self.tickets)
+
+        result = change_ticket_status(self.tickets, "T001", "cancelled")
+
+        self.assertFalse(result["ok"])
+        self.assertEqual(self.tickets, before)
+
+    def test_unknown_ticket_is_rejected_and_state_is_unchanged(self):
+        before = copy.deepcopy(self.tickets)
+
+        result = change_ticket_status(self.tickets, "T999", "in_progress")
+
+        self.assertFalse(result["ok"])
+        self.assertEqual(self.tickets, before)
+
+    def test_resolved_ticket_cannot_be_changed_directly(self):
+        self.tickets[0]["status"] = "resolved"
+        before = copy.deepcopy(self.tickets)
+
+        result = change_ticket_status(self.tickets, "T001", "in_progress")
+
+        self.assertFalse(result["ok"])
+        self.assertEqual(self.tickets, before)
 
 
    
