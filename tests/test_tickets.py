@@ -1,14 +1,15 @@
+import copy
 import unittest
 
 from campusflow.tickets import (
     calculate_priority,
-    validate_ticket,
     create_ticket,
+    find_ticket,
     generate_ticket_id,
     list_tickets,
-    view_ticket
+    validate_ticket,
+    view_ticket,
 )
-
 
 class TestPriority(unittest.TestCase):
 
@@ -83,6 +84,51 @@ class TestTicketCreation(unittest.TestCase):
     def test_generate_ticket_id_empty(self):
         result = generate_ticket_id([])
         self.assertEqual(result, "T001")
+    
+def test_created_ticket_has_empty_notes_list(self):
+    ticket = create_ticket(
+        "Wi-Fi not working",
+        "Network",
+        "high",
+        12,
+        "T001"
+    )
+
+    self.assertEqual(ticket["notes"], [])
+
+
+def test_validate_ticket_normalises_category_and_urgency(self):
+    result = validate_ticket(
+        "  Wi-Fi issue  ",
+        " network ",
+        " HIGH ",
+        10
+    )
+
+    self.assertEqual(
+        result,
+        ("Wi-Fi issue", "Network", "high", 10)
+    )
+
+
+def test_validate_ticket_rejects_boolean_affected_users(self):
+    with self.assertRaises(ValueError):
+        validate_ticket(
+            "Wi-Fi issue",
+            "Network",
+            "high",
+            True
+        )
+
+
+def test_validate_ticket_rejects_invalid_category(self):
+    with self.assertRaises(ValueError):
+        validate_ticket(
+            "Wi-Fi issue",
+            "Maintenance",
+            "high",
+            10
+        )
 
 
 class TestTicketViewing(unittest.TestCase):
@@ -116,3 +162,60 @@ class TestTicketViewing(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class TestFindTicket(unittest.TestCase):
+    def setUp(self):
+        self.tickets = [
+            {
+                "id": "T001",
+                "title": "Wi-Fi not working",
+                "category": "Network",
+                "urgency": "high",
+                "affected_users": 12,
+                "priority": "critical",
+                "status": "open",
+                "assigned_to": None,
+                "notes": []
+            },
+            {
+                "id": "T002",
+                "title": "Laptop will not start",
+                "category": "Hardware",
+                "urgency": "medium",
+                "affected_users": 2,
+                "priority": "low",
+                "status": "open",
+                "assigned_to": None,
+                "notes": []
+            }
+        ]
+
+    def test_returns_matching_ticket(self):
+        ticket = find_ticket(self.tickets, "T002")
+
+        self.assertIsNotNone(ticket)
+        self.assertEqual(ticket["id"], "T002")
+
+    def test_returns_none_for_unknown_ticket(self):
+        self.assertIsNone(find_ticket(self.tickets, "T999"))
+
+    def test_returns_none_for_non_string_id(self):
+        self.assertIsNone(find_ticket(self.tickets, 1))
+
+    def test_does_not_modify_ticket_collection(self):
+        before = copy.deepcopy(self.tickets)
+
+        find_ticket(self.tickets, "T001")
+
+        self.assertEqual(self.tickets, before)
+
+def find_ticket(tickets, ticket_id):
+    """Return the ticket with the given ID, or None if it does not exist."""
+    if not isinstance(ticket_id, str):
+        return None
+
+    for ticket in tickets:
+        if ticket.get("id") == ticket_id:
+            return ticket
+
+    return None

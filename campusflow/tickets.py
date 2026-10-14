@@ -1,3 +1,10 @@
+from campusflow.validation import (
+    validate_affected_users,
+    validate_category,
+    validate_title,
+    validate_urgency,
+)
+
 def calculate_priority(urgency, affected_users):
     if urgency == "high" and affected_users >= 10:
         return "critical"
@@ -12,32 +19,23 @@ def calculate_priority(urgency, affected_users):
         return "low"
 
 def validate_ticket(title, category, urgency, affected_users):
-    if not isinstance(title, str) or not title.strip():
-        raise ValueError("Title cannot be empty")
+    """Validate ticket input before creating or changing a ticket.
 
-    if not isinstance(category, str):
-        raise ValueError("Invalid category")
+    Returns normalised ticket values.
+    Raises ValueError if any input is invalid.
+    """
+    validated_title = validate_title(title)
+    validated_category = validate_category(category)
+    validated_urgency = validate_urgency(urgency)
+    validated_affected_users = validate_affected_users(affected_users)
 
-    category = category.strip().capitalize()
-
-    if category not in ["Network", "Hardware", "Software", "Other"]:
-        raise ValueError("Invalid category")
-
-    if not isinstance(urgency, str):
-        raise ValueError("Invalid urgency")
-
-    urgency = urgency.strip().lower()
-
-    if urgency not in ["low", "medium", "high"]:
-        raise ValueError("Invalid urgency")
-
-    if type(affected_users) is not int or affected_users <= 0:
-        raise ValueError("Affected users must be a positive integer")
-
-    return title.strip(), category, urgency, affected_users
-
+    return (
+        validated_title,
+        validated_category,
+        validated_urgency,
+        validated_affected_users,
+    )
 def create_ticket(title, category, urgency, affected_users, ticket_id):
-
     title, category, urgency, affected_users = validate_ticket(
         title, category, urgency, affected_users
     )
@@ -50,11 +48,11 @@ def create_ticket(title, category, urgency, affected_users, ticket_id):
         "affected_users": affected_users,
         "priority": calculate_priority(urgency, affected_users),
         "status": "open",
-        "assigned_to": None
+        "assigned_to": None,
+        "notes": []
     }
 
-    return ticket    
-
+    return ticket
 def generate_ticket_id(tickets):
     numbers = []
 
@@ -78,3 +76,14 @@ def view_ticket(tickets, ticket_id):
             return ticket
 
     return None    
+
+def find_ticket(tickets, ticket_id):
+    """Return the ticket with the given ID, or None if it does not exist."""
+    if not isinstance(ticket_id, str):
+        return None
+
+    for ticket in tickets:
+        if ticket.get("id") == ticket_id:
+            return ticket
+
+    return None

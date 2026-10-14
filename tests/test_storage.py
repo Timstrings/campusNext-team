@@ -6,6 +6,8 @@ from pathlib import Path
 
 from campusflow.storage import load_tickets, save_tickets
 from campusflow.tickets import create_ticket
+from campusflow.notes import add_note
+from campusflow.tickets import generate_ticket_id
 
 
 class TestNotesStorage(unittest.TestCase):
@@ -122,3 +124,70 @@ class TestNotesStorage(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             load_tickets(self.path)
+
+class TestIdContinuityAfterReload(unittest.TestCase):
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.path = Path(self.temp_dir.name) / "tickets.json"
+
+    def tearDown(self):
+        self.temp_dir.cleanup()
+
+    def test_next_ticket_id_continues_after_reload(self):
+        tickets = [
+            {
+                "id": "T007",
+                "title": "Wi-Fi not working",
+                "category": "Network",
+                "urgency": "high",
+                "affected_users": 12,
+                "priority": "critical",
+                "status": "open",
+                "assigned_to": None,
+                "notes": []
+            }
+        ]
+
+        save_tickets(tickets, self.path)
+        loaded_tickets = load_tickets(self.path)
+
+        self.assertEqual(generate_ticket_id(loaded_tickets), "T008")
+
+    def test_next_note_id_continues_after_reload(self):
+        tickets = [
+            {
+                "id": "T001",
+                "title": "Wi-Fi not working",
+                "category": "Network",
+                "urgency": "high",
+                "affected_users": 12,
+                "priority": "critical",
+                "status": "open",
+                "assigned_to": "IT Support",
+                "notes": [
+                    {
+                        "note_id": "N001",
+                        "author": "Mentor A",
+                        "message": "Router reboot attempted"
+                    },
+                    {
+                        "note_id": "N002",
+                        "author": "Mentor B",
+                        "message": "Investigating switch ports"
+                    }
+                ]
+            }
+        ]
+
+        save_tickets(tickets, self.path)
+        loaded_tickets = load_tickets(self.path)
+
+        result = add_note(
+            loaded_tickets,
+            "T001",
+            "Mentor C",
+            "Checking network cable connections"
+        )
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["note"]["note_id"], "N003")
