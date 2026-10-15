@@ -4,6 +4,9 @@ from campusflow.validation import (
     validate_title,
     validate_urgency,
 )
+CATEGORIES = ["Network", "Hardware", "Software", "Other"]
+STATUSES = ["open", "in_progress", "resolved"]
+PRIORITIES = ["low", "medium", "high", "critical"]
 
 def calculate_priority(urgency, affected_users):
     if urgency == "high" and affected_users >= 10:

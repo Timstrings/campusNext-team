@@ -1,17 +1,49 @@
+"""CampusFlow quality insights."""
+
 from collections import Counter
-from .tickets import Ticket, STATUSES, PRIORITIES, CATEGORIES
-def build_report(tickets: list[Ticket]) -> dict:
-    statuses = Counter(t.status for t in tickets)
-    priorities = Counter(t.priority for t in tickets)
-    categories = Counter(t.category for t in tickets)
+
+CATEGORIES = ["Network", "Hardware", "Software", "Other"]
+STATUSES = ["open", "in_progress", "resolved"]
+PRIORITIES = ["critical", "high", "medium", "low"]
+
+
+def build_report(tickets):
+    """Build a report from the current ticket collection."""
+    statuses = Counter(ticket["status"] for ticket in tickets)
+    priorities = Counter(ticket["priority"] for ticket in tickets)
+    categories = Counter(
+        ticket.get("category")
+        for ticket in tickets
+        if ticket.get("category") is not None
+    )
+
     total = len(tickets)
     resolved = statuses.get("resolved", 0)
+
     return {
-        "total": {"tickets": total},
-        "by_status": {s: statuses.get(s, 0) for s in sorted(STATUSES)},
-        "by_priority": {p: priorities.get(p, 0) for p in ("critical", "high", "medium", "low")},
-        "by_category": {c: categories.get(c, 0) for c in sorted(CATEGORIES)},
-        "unresolved": statuses.get("open", 0) + statuses.get("in_progress", 0),
+        "total": total,
+        "by_status": {
+            status: statuses.get(status, 0)
+            for status in sorted(STATUSES)
+        },
+        "by_priority": {
+            priority: priorities.get(priority, 0)
+            for priority in PRIORITIES
+        },
+        "by_category": {
+            category: categories.get(category, 0)
+            for category in sorted(CATEGORIES)
+        },
+        "unresolved": (
+            statuses.get("open", 0)
+            + statuses.get("in_progress", 0)
+        ),
         "resolved": resolved,
-        "resolution_percentage": round(resolved / total * 100, 2) if total else 0.0,
+        "resolution_percentage": (
+            round(resolved / total * 100, 2) if total else 0.0
+        ),
     }
+
+
+# Backward-compatible name used by the original CampusFlow tests.
+generate_report = build_report
