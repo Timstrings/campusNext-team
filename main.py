@@ -131,7 +131,7 @@ def main():
         return
 
     while True:
-        print("\n====== CAMPUSFLOW NEXT ======")
+        print("\n======= CAMPUSFLOW NEXT =======")
 
         menu_options = [
             "Create ticket",
