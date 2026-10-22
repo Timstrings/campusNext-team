@@ -12,5 +12,6 @@ QUESTIONS = [
     ("A PR changes validation but has no negative-case tests. Best review action?",
      ["Approve because it runs", "Request focused tests and reasoning", "Merge immediately", "Ask AI to approve it"], "B"),
 ]
+
 def score_answers(answers: list[str]) -> int:
     return sum(1 for i, q in enumerate(QUESTIONS) if i < len(answers) and answers[i].strip().upper() == q[2])
