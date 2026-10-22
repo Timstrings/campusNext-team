@@ -13,6 +13,7 @@ from campusflow.tickets import (
     generate_ticket_id,
     list_tickets,
 )
+
 from campusflow.understanding_check import QUESTIONS, score_answers
 from campusflow.workflow import (
     assign_ticket,

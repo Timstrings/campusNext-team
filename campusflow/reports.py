@@ -6,7 +6,6 @@ CATEGORIES = ["Network", "Hardware", "Software", "Other"]
 STATUSES = ["open", "in_progress", "resolved"]
 PRIORITIES = ["critical", "high", "medium", "low"]
 
-
 def build_report(tickets):
     """Build a report from the current ticket collection."""
     statuses = Counter(ticket["status"] for ticket in tickets)

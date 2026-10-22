@@ -11,7 +11,6 @@ PRIORITY_ORDER = {
     "low": 3,
 }
 
-
 def search_tickets(
     tickets,
     title="",
